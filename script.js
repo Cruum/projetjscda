@@ -4,7 +4,7 @@ const button = document.getElementById('buttonSubmit');
 const form = document.getElementById('form');
 const galerie = document.getElementById('galerie');
 const filtres = document.getElementById('filtres');
-console.log(section);
+
 let arrayQuestions = [
     ["Pika pika?", ["Attaque éclair", "Coup de taser dans sa g****", "pokeball go!", "réponse 42"], ["pokeball go!"]],
     ["Quel est le badge pour utiliser la compétence surf sur la première génération?", ["Pikachu attaque éclair!", "Badge eau", "glouglouglou", "Badge ame"], ["Badge ame"]],
@@ -26,15 +26,13 @@ let reponse = {}
 form.addEventListener('submit', e => {
     e.preventDefault();
     const formData = new FormData(form);
-
+console.log(formData);
     reponse = new Map();
 
     formData.forEach((value, key) => {
         reponse.set(key, value);
     });
 
-    console.log(reponse);
-    // calcResponseQuestions(reponse)
     alert(calcResponseQuestions(reponse))
 })
 
@@ -49,34 +47,28 @@ function calcResponseQuestions(responses) {
 
 
     let local = localStorage.getItem('userScore')
-    let scoreActuel = score - local
-    console.log(local);
-    console.log(score);
-    console.log(scoreActuel);
+    let scoreActuel = score - local;
 
 
     if (local) {
         let alert = (scoreActuel > 0) ? `Bien joué, tu as été meilleur, ton score est de ${score} au lieu de ${local}`
             : (scoreActuel < 0) ? `T'es encore plus nul, ton score est de ${score} au lieu de ${local}`
                 : `Pas ouf, tu es as égalité à ${scoreActuel} points`;
-                console.log(alert);
-                localStorage.setItem('userScore', score);
-                return alert
-            }
+        localStorage.setItem('userScore', score);
+        return alert
+    }
 
     else {
         let alert = (score === 3) ? `Bien joué, tu es le meilleur, ton score est de ${score}`
             : (score === 2) ? `Ca passe, ton score est de ${score}`
-            : (score === 1) ? `Pas ouf, ton score est de ${score}`
-            : `T'es nul, ton score est de ${score}`;
-        console.log(score);
-        console.log(typeof score);
+                : (score === 1) ? `Pas ouf, ton score est de ${score}`
+                    : `T'es nul, ton score est de ${score}`;
         localStorage.setItem('userScore', score);
         return alert
     }
 
 
-    
+
 }
 
 
@@ -88,10 +80,11 @@ async function type() {
         console.log(response);
 
         const types = result.results;
+        types.unshift({ name: 'Tous les Pokemons' });
         console.log(types);
         types.forEach((type, index) => {
             filtres.innerHTML += `<label>
-            <input type="radio" name="question ${index}" value="${type.name}">
+            <input type="checkbox" name="question ${index}" value="${type.name}">
             ${type.name}
           </label>
           <br>`;
@@ -101,19 +94,18 @@ async function type() {
         console.error('Erreur lors de la récupération des Pokémon :', error);
     }
 }
-type() 
+type()
 
 let pokemonData = [];
 
 async function asyncCall() {
     try {
-        // console.log('calling');
         const response = await fetch('https://pokeapi.co/api/v2/pokemon/');
         const result = await response.json();
         console.log(response);
-        
+
         const pokemons = result.results;
-// console.log(pokemons);
+        // console.log(pokemons);
         pokemons.forEach((pokemon, index) => {
             pokemonData.push({
                 name: pokemon.name,
@@ -136,12 +128,27 @@ async function takeUrlImages() {
 
             const imageUrl = result.sprites.front_default;
             const types = result.types[0].type.name
-            images.push({
-                name: pokemon.name,
-                url: imageUrl,
-                type: types
-            });
-            console.log(images);
+
+            console.log(result.types[1]);
+
+            if (result.types[1]) {
+                const types2 = result.types[1].type.name
+                console.log(types2);
+                images.push({
+                    name: pokemon.name,
+                    url: imageUrl,
+                    type: types,
+                    type2: types2
+                });
+            }
+            else {
+                images.push({
+                    name: pokemon.name,
+                    url: imageUrl,
+                    type: types,
+
+                });
+            }
         }
 
 
@@ -150,8 +157,11 @@ async function takeUrlImages() {
 
             const nameElement = document.createElement('p');
             nameElement.textContent = pokemon.name;
-            nameElement.dataset.type= pokemon.type;
-
+            nameElement.dataset.type = pokemon.type;
+            console.log(pokemon);
+            if (pokemon.type2) {
+                nameElement.dataset.type2 = pokemon.type2;
+            }
             const imageElement = document.createElement('img');
             imageElement.src = pokemon.url;
 
@@ -171,10 +181,28 @@ asyncCall().then(() => {
 
 
 
-filtres.addEventListener('change', (event) => { 
+filtres.addEventListener('change', (event) => {
+    console.log(images);
     selectedType = event.target.value;
+    console.log(selectedType);
+    if (selectedType === "Tous les Pokemons") {
+        galerie.innerHTML = '';
+        images.forEach((pokemon, index) => {
+            const container = document.createElement('div');
 
-    if (selectedType) {
+            const nameElement = document.createElement('p');
+            nameElement.textContent = pokemon.name;
+
+            const imageElement = document.createElement('img');
+            imageElement.src = pokemon.url;
+
+            container.appendChild(nameElement);
+            container.appendChild(imageElement);
+
+            galerie.appendChild(container);
+        });
+    }
+    else if (selectedType) {
         filterByType(selectedType);
     } else {
         galerie.innerHTML = '';
@@ -196,25 +224,25 @@ filtres.addEventListener('change', (event) => {
 
 })
 
-let selectedType = null; 
+let selectedType = null;
 
 function filterByType(type) {
     galerie.innerHTML = '';
 
-    const filteredImages = images.filter(pokemon => pokemon.type === type);
+    images.forEach((pokemon, index) => {
+        if (pokemon.type === type || pokemon.type2 === type) {
+            const container = document.createElement('div');
 
-    filteredImages.forEach((pokemon, index) => {
-        const container = document.createElement('div');
+            const nameElement = document.createElement('p');
+            nameElement.textContent = pokemon.name;
 
-        const nameElement = document.createElement('p');
-        nameElement.textContent = pokemon.name;
+            const imageElement = document.createElement('img');
+            imageElement.src = pokemon.url;
 
-        const imageElement = document.createElement('img');
-        imageElement.src = pokemon.url;
+            container.appendChild(nameElement);
+            container.appendChild(imageElement);
 
-        container.appendChild(nameElement);
-        container.appendChild(imageElement);
-
-        galerie.appendChild(container);
+            galerie.appendChild(container);
+        }
     });
 }

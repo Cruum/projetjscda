@@ -1,0 +1,35 @@
+h1{
+    width: 50%;
+    margin: auto;
+}
+main{
+    width: 50%;
+    margin: auto;
+}
+.molecules-pokemons{display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  
+}
+
+
+  .molecules-filtre{
+    width: 30%;
+    border: 4mm ridge rgba(211, 220, 50, .6);
+    
+  }
+
+.templates-pokemons{
+    max-width: 1000px;
+    display: flex;
+    margin:20px auto;
+    align-items: flex-start;
+}
+div{
+    text-align: center;
+}
+
+.display{
+    display: none;
+}
